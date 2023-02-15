@@ -1,0 +1,113 @@
+#include <Servo.h>
+unsigned long z =0; 
+volatile int IN1;
+volatile int IN2;
+volatile int IN3;
+volatile int IN4;
+volatile int rightDistance;
+volatile int leftDistance;
+Servo servo_4;
+
+void left_side_forward(int speed) {
+  // Left
+  analogWrite(IN1,(speed * 0.92));
+  analogWrite(IN2,0);
+}
+
+void right_side_forward(int speed) {
+  // Right
+  analogWrite(IN3,speed);
+  analogWrite(IN4,0);
+}
+
+void left_side_backward(int speed) {
+  // Left
+  analogWrite(IN1,0);
+  analogWrite(IN2,(speed * 0.92));
+}
+
+void right_side_backward(int speed) {
+  // Right
+  analogWrite(IN3,0);
+  analogWrite(IN4,speed);
+}
+
+float checkdistance_1_2() {
+  digitalWrite(1, LOW);
+  delayMicroseconds(2);
+  digitalWrite(1, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(1, LOW);
+  float distance = pulseIn(2, HIGH) / 58.00;
+  delay(10);
+  return distance;
+}
+
+void forward(int speed) {
+  left_side_forward(speed);
+  right_side_forward(speed);
+}
+
+void backward(int speed) {
+  left_side_backward(speed);
+  right_side_backward(speed);
+}
+
+void left(int speed, int time) {
+  left_side_backward(speed);
+  right_side_forward(speed);
+  delay(time);
+  stop();
+}
+
+void right(int speed, int time) {
+  left_side_forward(speed);
+  right_side_backward(speed);
+  delay(time);
+  stop();
+}
+
+void stop() {
+  DDRD =B11111111;
+  left_side_forward(0);
+  right_side_forward(0);
+}
+
+void setup(){
+  IN1 = 11;
+  IN2 = 6;
+  IN3 = 5;
+  IN4 = 3;
+  rightDistance = 3;
+  leftDistance = 3;
+  servo_4.attach(4);
+  pinMode(A1, OUTPUT);
+  pinMode(A2, INPUT);
+}
+
+void loop(){
+  while(z<100)
+z++;  
+  servo_4.write(90);
+  delay(500);
+  while (checkdistance_1_2() > 15) {
+    forward(100);
+  }
+  PORTC =B01010101;
+  delay(1000);
+  stop();
+  servo_4.write(0);
+  delay(500);
+  rightDistance = checkdistance_1_2();
+  servo_4.write(180);
+  delay(500);
+  leftDistance = checkdistance_1_2();
+  if (rightDistance >= leftDistance) {
+    right(200, 380);
+
+  } else {
+    left(200, 380);
+
+  }
+
+}
